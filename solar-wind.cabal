@@ -48,14 +48,14 @@ cabal-version:       >=1.10
 
 library
   -- Modules exported by the library.
-  exposed-modules:     Solar.Casting
-                     , Solar.Casting.Channel
-                     , Solar.Casting.Event
-                     , Solar.Casting.Server
-                     , Solar.Casting.Client
+  exposed-modules:     Solar.Caster
+                     , Solar.Caster.Channel
+                     , Solar.Caster.Event
+                     , Solar.Caster.Server
+                     , Solar.Caster.Client
   
   -- Modules included in this library but not exported.
-  other-modules:       Solar.Casting.Utility
+  other-modules:       Solar.Caster.Utility
   
   -- LANGUAGE extensions used by modules in this package.
   -- other-extensions:    
@@ -64,6 +64,7 @@ library
   build-depends:       base >=4.6 && <4.7
                      , stm
                      , pipes >= 4.0
+                     , containers
   
   -- Directories containing source files.
   -- hs-source-dirs:      
