@@ -1,1 +1,0 @@
-module Solar.Casting.Event where
