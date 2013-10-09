@@ -58,10 +58,11 @@ mergeZipper :: QueueZipper a -> Queue a
 mergeZipper (as, bs) = as ++ bs
 
 zipTo :: Queue a -> Integer -> QueueZipper a
-zipTo qs rc = (before, after')
+zipTo qs rc = (before', after')
     where
         (i, amt) = splitWhen' zipperSplitter rc qs 0
         (before, after) = splitAt i qs
+        before' = map (\x -> x {remaining = 0}) before
         after' = case after of
             [] -> []
             (x:xs) -> let x' = x {remaining = (remaining x) - amt} in x':xs 
