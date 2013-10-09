@@ -40,27 +40,28 @@ splitWhen' f a (v:vs) r
     where (tf, a') = f v a
 
 splitZipper :: Queue a -> DeltaContainer a -> QueueZipper a
-splitZipper qs c = (before, prependQueue after c' amt)
+splitZipper qs c = (before, c':after)
     where
-        (i, amt) = splitWhen' zipperSplitter rc qs 0
         rc = remaining c
-        (before, after) = splitAt i qs
+        (before, after) = zipTo qs rc
         c' = c {remaining = rc - sumQueue before}
 
 zipperSplitter :: DeltaContainer a -> Integer -> (Bool, Integer)
 zipperSplitter v a
     | a == 0    = (False, 0)
     | v' < a    = (True, a - v')
-    | v' == a   = (False, 0)
-    | otherwise = (False, v')
+    | otherwise = (False, a)
     where v' = remaining v
-
-prependQueue :: Queue a -> DeltaContainer a -> Integer -> Queue a
-prependQueue [] x _ = [x]
-prependQueue (o:os) x amt = x:o':os
-    where o' = o {remaining = amt}
 
 
 mergeZipper :: QueueZipper a -> Queue a
 mergeZipper (as, bs) = as ++ bs
 
+zipTo :: Queue a -> Integer -> QueueZipper a
+zipTo qs rc = (before, after')
+    where
+        (i, amt) = splitWhen' zipperSplitter rc qs 0
+        (before, after) = splitAt i qs
+        after' = case after of
+            [] -> []
+            (x:xs) -> let x' = x {remaining = (remaining x) - amt} in x':xs 
