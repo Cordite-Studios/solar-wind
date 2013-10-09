@@ -69,6 +69,7 @@ library
                      , pipes >= 4.0
                      , containers
                      , bytestring
+                     , time
   
   -- Directories containing source files.
   -- hs-source-dirs:      
