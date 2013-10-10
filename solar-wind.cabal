@@ -53,9 +53,10 @@ library
                      , Solar.Caster.Event
                      , Solar.Caster.Server
                      , Solar.Caster.Client
+                     , Solar.Caster.Time
   
   -- Modules included in this library but not exported.
-  other-modules:       Solar.Caster.Utility.Time
+  -- other-modules:       
                      
   
   -- LANGUAGE extensions used by modules in this package.
