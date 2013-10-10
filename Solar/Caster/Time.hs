@@ -96,7 +96,14 @@ getClockTicker tc diff = do
     td <- readTVar $ deltaTicker c
     case filter filt td of
         (x:_) -> return $ tick.content $ x
-        _ -> undefined
+        _ -> do
+            tv <- newTVar $ Tick 0 (lastTick c) diff
+            let int = tickInterval c
+                amt = ceiling $ diff / int
+                dc = DeltaContainer (Ticker tv diff) amt
+                newq = insert dc td
+            writeTVar (deltaTicker c) newq
+            return tv
     where
         filt v = diff == (toTick.content $ v)
 
