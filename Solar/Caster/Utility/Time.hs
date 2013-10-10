@@ -59,3 +59,12 @@ applyTick time tk' = do
         newk = k {ticks = totalticks + 1, tickedLast = time}
     writeTVar (tick tk) newk
 
+getClockTicker :: TVar TickingClock -> NominalDiffTime -> STM (TVar Tick)
+getClockTicker tc diff = do
+    c <- readTVar tc
+    td <- readTVar $ deltaTicker c
+    case filter filt td of
+        (x:_) -> return $ tick.content $ x
+        _ -> undefined
+    where
+        filt v = diff == (toTick.content $ v)

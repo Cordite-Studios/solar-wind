@@ -53,11 +53,9 @@ library
                      , Solar.Caster.Event
                      , Solar.Caster.Server
                      , Solar.Caster.Client
-                     , Solar.Utility.Delta
   
   -- Modules included in this library but not exported.
-  other-modules:       Solar.Caster.Utility
-                     , Solar.Caster.Utility.Time
+  other-modules:       Solar.Caster.Utility.Time
                      
   
   -- LANGUAGE extensions used by modules in this package.
@@ -65,6 +63,7 @@ library
   
   -- Other library packages from which modules are imported.
   build-depends:       base >=4.6 && <4.7
+                     , solar-shared == 0.1.*
                      , stm
                      , pipes >= 4.0
                      , containers
