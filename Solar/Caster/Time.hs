@@ -1,10 +1,26 @@
-module Solar.Caster.Time where
+{-# LANGUAGE DeriveDataTypeable #-}
+module Solar.Caster.Time
+    (   -- * Structures
+      Tick(..)
+    , Ticker(..)
+    , TickerD
+    , TickingClock(..)
+        -- * Main interaction points
+    , incClock
+    , incClock'
+    , getClockTicker
+    , runClock
+    )
+where
 
 import Control.Concurrent.STM
-import Control.Concurrent
 import Solar.Utility.Delta
 import Data.Time
 import Control.Monad
+import Control.Concurrent
+import Control.Exception
+import Data.Typeable
+import Data.Maybe(isNothing)
 
 data Tick = Tick
     { ticks :: Integer
@@ -27,10 +43,13 @@ type DCTicker = DeltaContainer Ticker NominalDiffTime
 data TickingClock = TickingClock
     { deltaTicker :: TVar TickerD
     , lastTick    :: UTCTime
+    , threadId    :: Maybe ThreadId
     }
 
 
-incClock :: TVar TickingClock -> IO ()
+incClock    :: ()
+            => TVar TickingClock
+            -> IO ()
 incClock t = do
     time <- getCurrentTime
     atomically $ do
@@ -39,7 +58,11 @@ incClock t = do
         incClock' time diff t
         writeTVar t $ c {lastTick = time}
 
-incClock' :: UTCTime -> NominalDiffTime -> TVar TickingClock -> STM ()
+incClock'   :: ()
+            => UTCTime
+            -> NominalDiffTime
+            -> TVar TickingClock
+            -> STM ()
 incClock' time dr t = do
     c <- readTVar t
     dt <- readTVar $ deltaTicker c
@@ -55,22 +78,21 @@ incClock' time dr t = do
         up = upClock time
         f v r = v {remaining = r}
 
-
-
-getNextLength :: TickerD -> NominalDiffTime
-getNextLength d = case d of
-    (x:_) -> toTick.content $ x
-    _ -> 86400 -- 1 day
-
-
-upClock :: UTCTime -> DCTicker -> STM (NominalDiffTime)
+upClock     :: ()
+            => UTCTime 
+            -> DCTicker 
+            -> STM (NominalDiffTime)
 upClock time t' = do
     let td = content t'
         tt = tick td
     t <- readTVar tt
     upClock' time t td 
     
-upClock' :: UTCTime -> Tick -> Ticker -> STM (NominalDiffTime)
+upClock'    :: ()
+            => UTCTime
+            -> Tick
+            -> Ticker
+            -> STM (NominalDiffTime)
 upClock' time t tv
     | (tickLength t) /= (toTick tv) = upClock' time (t {tickLength = toTick tv}) tv
     -- ↑ Sanity check so people can't change stuff ad hoc
@@ -88,9 +110,10 @@ upClock' time t tv
         r = if diffB then ti else tid
         tticks = ticks t
 
-
-
-applyTick :: UTCTime -> DCTicker -> STM ()
+applyTick   :: ()
+            => UTCTime
+            -> DCTicker
+            -> STM ()
 applyTick time tk' = do
     let tk = content tk'
     k <- readTVar $ tick tk 
@@ -98,7 +121,10 @@ applyTick time tk' = do
         newk = k {ticks = totalticks + 1, tickedLast = time}
     writeTVar (tick tk) newk
 
-getClockTicker :: TVar TickingClock -> NominalDiffTime -> STM (TVar Tick)
+getClockTicker  :: ()
+                => TVar TickingClock
+                -> NominalDiffTime
+                -> STM (TVar Tick)
 getClockTicker tc diff = do
     c <- readTVar tc
     td <- readTVar $ deltaTicker c
@@ -113,7 +139,72 @@ getClockTicker tc diff = do
     where
         filt v = diff == (toTick.content $ v)
 
+getNextLength   :: ()
+                => TickerD
+                -> NominalDiffTime
+getNextLength d = case d of
+    (x:_) -> remaining x
+    _ -> 86400 -- 1 day
 
+runClock    :: ()
+            => TVar TickingClock
+            -> IO ()
+runClock tc = do
+    -- Sanity Check
+    cth <- atomically $ do
+        c <- readTVar tc
+        return $ threadId c
+    unless (isNothing cth) $ throw ClockAlreadyRunning
+    -- Take ownership
+    mth <- myThreadId
+    atomically $ do
+        c <- readTVar tc
+        writeTVar tc $ c { threadId = Just mth}
+    catch m f
+    where
+        m = do
+            -- Sanity check
+            mth <- myThreadId
+            cth <- atomically $ do
+                c <- readTVar tc
+                return $ threadId c
+            unless (Just mth == cth) $ throw ClockChanged
+
+            -- Get time to sleep
+            dt <- atomically $ do
+                c <- readTVar tc
+                readTVar $ deltaTicker c
+            let l = (toRational $ getNextLength dt) * 1000000
+                fl = floor l
+                fl :: Integer
+                lf = fromIntegral fl
+            -- Do the sleeping
+            threadDelay lf
+            -- Hit the clock
+            incClock tc
+            m -- Loop again!
+        f :: ClockException -> IO ()
+        f ItemAdded = do
+            incClock tc
+            catch m f
+        f _ = do
+            mth <- myThreadId
+            -- Remove ownership
+            atomically $ do
+                c <- readTVar tc
+                let cth = threadId c
+                when (Just mth == cth) $ do
+                    writeTVar tc $ c { threadId = Nothing}
+            -- Cease this function
+            return ()
+
+data ClockException = ItemAdded | ClockAlreadyRunning | ClockChanged
+    deriving (Show, Typeable)
+
+instance Exception ClockException
+
+
+-- import Control.Concurrent
 
 mkDemoTicker time i' = do
     let i = fromInteger i'
@@ -125,7 +216,7 @@ mkDemo = do
     atomically $ do
         ts <- mapM (mkDemoTicker time) [1..10]
         qts <- newTVar $ foldr insert [] ts
-        tsv <- newTVar $ TickingClock qts time
+        tsv <- newTVar $ TickingClock qts time Nothing
         return tsv
 
 showDemo tc' = do
@@ -158,3 +249,4 @@ stepUntil d time diff endtime = do
     showDemo d
     when (ntime < endtime) $ stepUntil d ntime diff endtime
     where ntime = addUTCTime diff time
+
