@@ -34,5 +34,6 @@ extra-packages: ! 'Hackage: tasty
 
   Hackage: tasty-hunit
 
-  Hackage: tasty-quickcheck 0.3.1'
+  Git: https://github.com/feuerbach/tasty 791cbefbf8ca531b3b27cb07809a04581d38e1c9
+  quickcheck'
 ghc-args: []

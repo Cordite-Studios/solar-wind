@@ -9,6 +9,7 @@ import Control.Concurrent.STM
 -- Base imports
 import Control.Exception
 import Control.Monad
+import Data.Maybe
 import System.Timeout
 
 -- This library imports
