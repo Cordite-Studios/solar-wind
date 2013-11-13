@@ -11,8 +11,8 @@ sleepOn :: ()
         -> Int -- ^ Time to sleep in microseconds
         -> IO () -- ^ Blocking action
 sleepOn w i = do
-    tryTakeMVar w -- Clear the state
-    timeout i $ takeMVar w
+    _ <- tryTakeMVar w -- Clear the state
+    _ <- timeout i $ takeMVar w
     return ()
 
 -- | Does similar to compare and swap
@@ -23,7 +23,7 @@ sleepOnSTM  :: (Eq a)
             -> (TVar b -> STM a)
             -> IO ()
 sleepOnSTM i original s f = do
-    timeout i $ atomically $ do
+    _ <- timeout i $ atomically $ do
         current <- f s
         check $ current /= original
         -- Only let the transaction pass through
