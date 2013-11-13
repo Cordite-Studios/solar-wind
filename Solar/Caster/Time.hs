@@ -270,7 +270,7 @@ doDemo x = do
     showDemo d
     time <- getCurrentTime
     let endtime = addUTCTime (fromInteger x) time
-    stepUntil d time 1.0000001 endtime
+    stepUntil d time 1.0 endtime
 doDemo' x = do
     d <- mkDemo
     showDemo d
