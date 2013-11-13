@@ -25,7 +25,7 @@ import Solar.Utility.Wait
 import Data.Time
 import Control.Monad
 import Control.Concurrent
-import Control.Exception
+import Control.Exception as E
 import Data.Typeable
 import Data.Maybe(isNothing)
 
@@ -72,12 +72,16 @@ stopClock tc = do
         return $ threadId c
     case tid of
         Nothing -> return ()
-        Just t -> throwTo t ClockStopped
+        Just t -> do
+            throwTo t ClockStopped
+            atomically $ do
+                c <- readTVar tc
+                writeTVar tc $ c { threadId = Nothing }
 
 startClock :: TVar TickingClock -> IO ()
 startClock tc = do
     forkIOWithUnmask $ \unmask -> do
-        catch (unmask $ runClock tc) f
+        E.catch (unmask $ runClock tc) f
     return ()
     where
         f :: ClockException -> IO ()
