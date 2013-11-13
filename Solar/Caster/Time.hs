@@ -39,7 +39,7 @@ data Ticker = Ticker
     , toTick :: NominalDiffTime
     }
 instance Eq Ticker where
-    a == b = (toTick a == toTick b)
+    a == b = toTick a == toTick b
 
 instance Ord Ticker where
     compare a b = compare (toTick a) (toTick b)
@@ -80,7 +80,7 @@ stopClock tc = do
 
 startClock :: TVar TickingClock -> IO ()
 startClock tc = do
-    forkIOWithUnmask $ \unmask -> do
+    forkIOWithUnmask $ \unmask ->
         E.catch (unmask $ runClock tc) f
     return ()
     where
@@ -122,7 +122,7 @@ incClock' time dr t = do
 upClock     :: ()
             => UTCTime 
             -> DCTicker 
-            -> STM (NominalDiffTime)
+            -> STM NominalDiffTime
 upClock time t' = do
     let td = content t'
         tt = tick td
@@ -133,9 +133,9 @@ upClock'    :: ()
             => UTCTime
             -> Tick
             -> Ticker
-            -> STM (NominalDiffTime)
+            -> STM NominalDiffTime
 upClock' time t tv
-    | (tickLength t) /= (toTick tv) = upClock' time (t {tickLength = toTick tv}) tv
+    | tickLength t /= toTick tv = upClock' time (t {tickLength = toTick tv}) tv
     -- ↑ Sanity check so people can't change stuff ad hoc
     | not diffB = return r
     | otherwise = do
@@ -212,13 +212,13 @@ runClock' tc = do
             dt = deltaTicker c
         cq <- readTVar dt
         tq <- readTVar $ deltaTicker c
-        return $ (tid, dt, tq)
+        return (tid, dt, tq)
     unless (Just mth == cth) $ throw ClockChanged
     -- Get time to sleep
     dt <- atomically $ do
         c <- readTVar tc
         readTVar $ deltaTicker c
-    let l = (toRational $ getNextLength dt) * 1000000
+    let l = toRational (getNextLength dt) * 1000000
         fl = floor l
         fl :: Integer
         lf = fromIntegral fl

@@ -6,7 +6,7 @@ data DeltaContainer a b = DeltaContainer
     } deriving (Show)
 
 instance (Eq b) => Eq (DeltaContainer a b) where
-    a == b = (remaining a) == (remaining b)
+    a == b = remaining a == remaining b
 
 instance (Ord b) => Ord (DeltaContainer a b) where
     compare a b = compare (remaining a) (remaining b)
@@ -52,7 +52,7 @@ zipTo qs rc = (before, after')
         (before, after) = splitAt i qs
         after' = case after of
             [] -> []
-            (x:xs) -> let x' = x {remaining = (remaining x) - amt} in x':xs 
+            (x:xs) -> let x' = x {remaining = remaining x - amt} in x':xs 
 
 zipOver :: (Num b, Ord b) => Queue a b -> b -> QueueZipper a b
 zipOver qs rc = (before', after)
