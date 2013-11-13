@@ -1,5 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables #-}
-module Delta where
+module Test.Delta where
 
 import Test.Tasty
 import Test.Tasty.QuickCheck as QC

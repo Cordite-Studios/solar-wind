@@ -1,4 +1,4 @@
-module Time where
+module Test.Time where
 
 import Test.Tasty
 import Test.Tasty.HUnit
