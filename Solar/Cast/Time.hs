@@ -1,4 +1,3 @@
-{-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE CPP #-}
 module Solar.Cast.Time
     (   -- * Structures
@@ -6,6 +5,7 @@ module Solar.Cast.Time
     , Ticker(..)
     , TickerD
     , TickingClock
+    , ClockException(..)
       -- * Main interaction points
     , mkNewTicker
     , getClockTicker
@@ -19,6 +19,8 @@ module Solar.Cast.Time
     )
 where
 
+import Solar.Cast.Internal.Time
+
 import Control.Concurrent.STM
 import Solar.Utility.Delta
 import Solar.Utility.Wait
@@ -26,34 +28,7 @@ import Data.Time
 import Control.Monad
 import Control.Concurrent
 import Control.Exception as E
-import Data.Typeable
 import Data.Maybe(isNothing)
-
-data Tick = Tick
-    { ticks :: Integer
-    , tickedLast :: UTCTime
-    , tickLength :: NominalDiffTime
-    } deriving (Eq, Ord, Show)
-data Ticker = Ticker
-    { tick :: TVar Tick
-    , toTick :: NominalDiffTime
-    }
-instance Eq Ticker where
-    a == b = toTick a == toTick b
-
-instance Ord Ticker where
-    compare a b = compare (toTick a) (toTick b)
-
-type TickerD = Queue Ticker NominalDiffTime
-type DCTicker = DeltaContainer Ticker NominalDiffTime
-
--- | The clock structure which is passed around
--- and maintains information on the ownership
-data TickingClock = TickingClock
-    { deltaTicker :: TVar TickerD
-    , lastTick    :: UTCTime
-    , threadId    :: Maybe ThreadId
-    }
 
 mkNewTicker' :: UTCTime -> STM (TVar TickingClock)
 mkNewTicker' time = do
@@ -122,49 +97,6 @@ incClock' time dr t = do
         up = upClock time
         f v r = v {remaining = r}
 
-upClock     :: ()
-            => UTCTime 
-            -> DCTicker 
-            -> STM NominalDiffTime
-upClock time t' = do
-    let td = content t'
-        tt = tick td
-    t <- readTVar tt
-    upClock' time t td 
-    
-upClock'    :: ()
-            => UTCTime
-            -> Tick
-            -> Ticker
-            -> STM NominalDiffTime
-upClock' time t tv
-    | tickLength t /= toTick tv = upClock' time (t {tickLength = toTick tv}) tv
-    -- ↑ Sanity check so people can't change stuff ad hoc
-    | not diffB = return r
-    | otherwise = do
-        writeTVar (tick tv) $ t {ticks = tticks+1, tickedLast = time}
-        return r
-    where
-        lastT = tickedLast t
-        ti = tickLength t
-        diff = diffUTCTime time lastT
-        tid = ti - diff
-        diffB = tid <= 0
-        -- ↑ When this is a tick.
-        r = if diffB then ti else tid
-        tticks = ticks t
-
-applyTick   :: ()
-            => UTCTime
-            -> DCTicker
-            -> STM ()
-applyTick time tk' = do
-    let tk = content tk'
-    k <- readTVar $ tick tk 
-    let totalticks = ticks k 
-        newk = k {ticks = totalticks + 1, tickedLast = time}
-    writeTVar (tick tk) newk
-
 getClockTicker  :: ()
                 => TVar TickingClock
                 -> NominalDiffTime
@@ -182,29 +114,6 @@ getClockTicker tc diff = do
             return tv
     where
         filt v = diff == (toTick.content $ v)
-
-getNextLength   :: ()
-                => TickerD
-                -> NominalDiffTime
-getNextLength d = case d of
-    (x:_) -> remaining x
-    _ -> 86400 -- 1 day
-
-runClock    :: ()
-            => TVar TickingClock
-            -> IO ()
-runClock tc = do
-    -- Sanity Check
-    cth <- atomically $ do
-        c <- readTVar tc
-        return $ threadId c
-    unless (isNothing cth) $ throw ClockAlreadyRunning
-    -- Take ownership
-    mth <- myThreadId
-    atomically $ do
-        c <- readTVar tc
-        writeTVar tc $ c { threadId = Just mth}
-    runClock' tc
 
 runClock' :: TVar TickingClock -> IO ()
 runClock' tc = do
@@ -233,11 +142,21 @@ runClock' tc = do
     -- Run again!
     runClock' tc
 
-
-data ClockException = ClockAlreadyRunning | ClockStopped | ClockChanged
-    deriving (Show, Typeable)
-
-instance Exception ClockException
+runClock    :: ()
+            => TVar TickingClock
+            -> IO ()
+runClock tc = do
+    -- Sanity Check
+    cth <- atomically $ do
+        c <- readTVar tc
+        return $ threadId c
+    unless (isNothing cth) $ throw ClockAlreadyRunning
+    -- Take ownership
+    mth <- myThreadId
+    atomically $ do
+        c <- readTVar tc
+        writeTVar tc $ c { threadId = Just mth}
+    runClock' tc
 
 
 -- import Control.Concurrent
