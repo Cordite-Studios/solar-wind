@@ -1,5 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables #-}
-module Delta where
+module Test.Delta where
 
 import Test.Tasty
 import Test.Tasty.QuickCheck as QC
@@ -21,7 +21,7 @@ delta = testGroup "Delta"
         \(v::[Positive Integer]) (skip::Positive Integer) ->
             let x = map (DeltaContainer ()) v
                 (z1, z2) = zipTo x skip
-            in sumQueue x >= (sumQueue z1) + (sumQueue z2)
+            in sumQueue x >= sumQueue z1 + sumQueue z2
     , QC.testProperty "Zipping over always has a 0 sum queue" $
         \(v::[Positive Integer]) (skip::Positive Integer) ->
             let x = map (DeltaContainer ()) v
@@ -32,7 +32,7 @@ delta = testGroup "Delta"
             let dc = DeltaContainer ()
                 x = map dc v
                 x' = foldl (\a val -> insert (dc val) a) x v'
-            in if length v' == 0
+            in if null v'
                 then length x' == length x
                 else length x' > length x
     ]

@@ -1,7 +1,38 @@
 module-template: ''
 extensions: {}
-environment: null
+environment: ghc-7.4.2-unstable
 cabal-file: project.cabal
-modules: {}
+modules:
+  Solar.Cast.Client:
+    filename: Solar/Cast/Client.hs
+  Test.Time:
+    filename: Test/Time.hs
+  Solar.Utility.Wait:
+    filename: Solar/Utility/Wait.hs
+  Solar.Cast:
+    filename: Solar/Cast.hs
+  Test.Delta:
+    filename: Test/Delta.hs
+  Solar.Cast.Server:
+    filename: Solar/Cast/Server.hs
+  Test:
+    filename: Test.hs
+  Solar.Utility.Date:
+    filename: Solar/Utility/Date.hs
+  Solar.Cast.Event:
+    filename: Solar/Cast/Event.hs
+  Solar.Cast.Internal.Time:
+    filename: Solar/Cast/Internal/Time.hs
+  Solar.Cast.Channel:
+    filename: Solar/Cast/Channel.hs
+  Solar.Cast.Time:
+    filename: Solar/Cast/Time.hs
+  Solar.Utility.Delta:
+    filename: Solar/Utility/Delta.hs
 version: 1
+extra-packages: ! 'Hackage: tasty
+
+  Hackage: tasty-hunit
+
+  Hackage: tasty-quickcheck 0.3.1'
 ghc-args: []

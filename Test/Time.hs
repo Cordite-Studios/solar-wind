@@ -1,4 +1,4 @@
-module Time where
+module Test.Time where
 
 import Test.Tasty
 import Test.Tasty.HUnit
@@ -41,7 +41,7 @@ time = testGroup "Solar.Cast.Time"
         tc <- mkNewTicker
         startClock tc
         t <- readTVarIO tc
-        when (threadId t /= Nothing) $ error "Thread did not register"
+        when (isJust $ threadId t) $ error "Thread did not register"
         stopClock tc
         t' <- readTVarIO tc
         threadId t' @?= Nothing
@@ -50,8 +50,8 @@ time = testGroup "Solar.Cast.Time"
         -- Should not throw an exception.
         -- Should return.
         p <- timeout 10000 $ bracket
-            (mkNewTicker)
-            (\tc -> stopClock tc)
+            mkNewTicker
+            stopClock
             (\tc -> do
                 startClock tc
                 startClock tc)
@@ -59,7 +59,7 @@ time = testGroup "Solar.Cast.Time"
     , testCase "Correct spacing between counts" $ do
         tc <- mkNewTicker
         let x = 100
-        atomically $ forM_ [1..x] $ \d -> do
+        atomically $ forM_ [1..x] $ \d ->
             getClockTicker tc (fromInteger d)
         t <- readTVarIO tc
         tq <- readTVarIO $ deltaTicker t

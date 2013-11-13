@@ -1,10 +1,10 @@
-module Main where
+module Test where
 
 -- Test imports
 import Test.Tasty
 
-import Time
-import Delta
+import Test.Time
+import Test.Delta
 
 main :: IO ()
 main = defaultMain tests
