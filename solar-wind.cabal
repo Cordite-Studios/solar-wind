@@ -85,7 +85,8 @@ library
 test-suite tests
   default-language:     Haskell2010
   type:                 exitcode-stdio-1.0
-  main-is:              Test.hs
+  hs-source-dirs:       tests
+  main-is:              Main.hs
   ghc-options:          -Wall -threaded 
   build-depends:        solar-wind
                       , tasty
@@ -94,6 +95,6 @@ test-suite tests
                       , base
                       , stm
                       , time
-                      
+
   other-modules:        Test.Time
                       , Test.Delta
