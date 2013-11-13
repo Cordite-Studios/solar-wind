@@ -74,14 +74,19 @@ stopClock tc = do
         Nothing -> return ()
         Just t -> do
             throwTo t ClockStopped
-            atomically $ do
-                c <- readTVar tc
-                writeTVar tc $ c { threadId = Nothing }
 
 startClock :: TVar TickingClock -> IO ()
 startClock tc = do
-    forkIOWithUnmask $ \unmask ->
-        E.catch (unmask $ runClock tc) f
+    forkIOWithUnmask $ \unmask -> do
+        tid <- myThreadId
+        E.catch (unmask $ bracket
+            (return ())
+            (\_ -> atomically $ do
+                c <- readTVar tc
+                when (threadId c == Just tid) 
+                    (writeTVar tc $ c { threadId = Nothing })
+            )
+            (\_ -> runClock tc)) f
     return ()
     where
         f :: ClockException -> IO ()
