@@ -23,5 +23,8 @@ modules:
     filename: Solar/Cast/Time.hs
   Solar.Utility.Delta:
     filename: Solar/Utility/Delta.hs
+  Test:
+    filename: test/Main.hs
+    target-type: console
 version: 1
 ghc-args: []
