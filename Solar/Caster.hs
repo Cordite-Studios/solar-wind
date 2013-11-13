@@ -1,1 +1,1 @@
-module Solar.Caster where
+module Solar.Cast where

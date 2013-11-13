@@ -1,6 +1,6 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE CPP #-}
-module Solar.Caster.Time
+module Solar.Cast.Time
     (   -- * Structures
       Tick(..)
     , Ticker(..)

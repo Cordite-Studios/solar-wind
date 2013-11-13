@@ -5,20 +5,20 @@ extensions: {}
 environment: null
 cabal-file: project.cabal
 modules:
-  Solar.Caster.Server:
-    filename: Solar/Caster/Server.hs
-  Solar.Caster.Channel:
-    filename: Solar/Caster/Channel.hs
-  Solar.Caster.Event:
-    filename: Solar/Caster/Event.hs
+  Solar.Cast.Server:
+    filename: Solar/Cast/Server.hs
+  Solar.Cast.Channel:
+    filename: Solar/Cast/Channel.hs
+  Solar.Cast.Event:
+    filename: Solar/Cast/Event.hs
   Solar.Utility.Wait:
     filename: Solar/Utility/Wait.hs
-  Solar.Caster.Client:
-    filename: Solar/Caster/Client.hs
-  Solar.Caster.Time:
-    filename: Solar/Caster/Time.hs
-  Solar.Caster:
-    filename: Solar/Caster.hs
+  Solar.Cast.Client:
+    filename: Solar/Cast/Client.hs
+  Solar.Cast.Time:
+    filename: Solar/Cast/Time.hs
+  Solar.Cast:
+    filename: Solar/Cast.hs
   Solar.Utility.Date:
     filename: Solar/Utility/Date.hs
   Solar.Utility.Delta:
