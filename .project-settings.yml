@@ -6,7 +6,7 @@ modules:
   Solar.Cast.Client:
     filename: Solar/Cast/Client.hs
   Test.Time:
-    filename: Test/Time.hs
+    filename: tests/Test/Time.hs
   Solar.Utility.Wait:
     filename: Solar/Utility/Wait.hs
   Solar.Cast:
@@ -15,8 +15,8 @@ modules:
     filename: Test/Delta.hs
   Solar.Cast.Server:
     filename: Solar/Cast/Server.hs
-  Test.Main:
-    filename: Test.hs
+  Main:
+    filename: tests/Main.hs
   Solar.Utility.Date:
     filename: Solar/Utility/Date.hs
   Solar.Cast.Event:
