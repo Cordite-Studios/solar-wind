@@ -84,7 +84,7 @@ applyTick time tk' = do
 
 applyTick'  :: ()
             => Tick
-            => UTCTime
+            -> UTCTime
             -> Tick
 applyTick' k time =
     k {ticks = totalticks + 1, tickedLast = time}
