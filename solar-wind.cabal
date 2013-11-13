@@ -93,5 +93,7 @@ test-suite tests
                       , tasty-hunit
                       , base
                       , stm
+                      , time
+                      
   other-modules:        Test.Time
                       , Test.Delta

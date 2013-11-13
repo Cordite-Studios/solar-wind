@@ -1,4 +1,4 @@
-module Test where
+module Main where
 
 -- Test imports
 import Test.Tasty
