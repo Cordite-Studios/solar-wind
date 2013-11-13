@@ -2,29 +2,6 @@ module-template: ''
 extensions: {}
 environment: null
 cabal-file: project.cabal
-modules:
-  Solar.Cast.Client:
-    filename: Solar/Cast/Client.hs
-  Solar.Utility.Wait:
-    filename: Solar/Utility/Wait.hs
-  Solar.Cast:
-    filename: Solar/Cast.hs
-  Solar.Cast.Server:
-    filename: Solar/Cast/Server.hs
-  Solar.Utility.Date:
-    filename: Solar/Utility/Date.hs
-  Solar.Cast.Event:
-    filename: Solar/Cast/Event.hs
-  Solar.Cast.Internal.Time:
-    filename: Solar/Cast/Internal/Time.hs
-  Solar.Cast.Channel:
-    filename: Solar/Cast/Channel.hs
-  Solar.Cast.Time:
-    filename: Solar/Cast/Time.hs
-  Solar.Utility.Delta:
-    filename: Solar/Utility/Delta.hs
-  Test:
-    filename: test/Main.hs
-    target-type: console
+modules: {}
 version: 1
 ghc-args: []
