@@ -15,10 +15,10 @@ modules:
     filename: Solar/Utility/Date.hs
   Solar.Cast.Event:
     filename: Solar/Cast/Event.hs
-  Solar.Cast.Channel:
-    filename: Solar/Cast/Channel.hs
   Solar.Cast.Internal.Time:
     filename: Solar/Cast/Internal/Time.hs
+  Solar.Cast.Channel:
+    filename: Solar/Cast/Channel.hs
   Solar.Cast.Time:
     filename: Solar/Cast/Time.hs
   Solar.Utility.Delta:
