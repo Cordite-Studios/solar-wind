@@ -72,8 +72,7 @@ stopClock tc = do
         return $ threadId c
     case tid of
         Nothing -> return ()
-        Just t -> do
-            throwTo t ClockStopped
+        Just t -> throwTo t ClockStopped
 
 startClock :: TVar TickingClock -> IO ()
 startClock tc = do
