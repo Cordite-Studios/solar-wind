@@ -77,15 +77,14 @@ stopClock tc = do
 
 startClock :: TVar TickingClock -> IO ()
 startClock tc = do
-    forkIOWithUnmask $ \unmask -> do
+    _ <- forkIOWithUnmask $ \unmask -> do
         tid <- myThreadId
         E.catch (unmask $ bracket
             (return ())
             (\_ -> atomically $ do
                 c <- readTVar tc
                 when (threadId c == Just tid) 
-                    (writeTVar tc $ c { threadId = Nothing })
-            )
+                    (writeTVar tc $ c { threadId = Nothing }))
             (\_ -> runClock tc)) f
     return ()
     where
@@ -211,13 +210,11 @@ runClock tc = do
 runClock' :: TVar TickingClock -> IO ()
 runClock' tc = do
     mth <- myThreadId
-    (cth, q, tq) <- atomically $ do
+    (cth, tq) <- atomically $ do
         c <- readTVar tc
         let tid = threadId c
-            dt = deltaTicker c
-        cq <- readTVar dt
         tq <- readTVar $ deltaTicker c
-        return (tid, dt, tq)
+        return (tid, tq)
     unless (Just mth == cth) $ throw ClockChanged
     -- Get time to sleep
     dt <- atomically $ do
