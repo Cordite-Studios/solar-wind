@@ -15,7 +15,7 @@ modules:
     filename: Test/Delta.hs
   Solar.Cast.Server:
     filename: Solar/Cast/Server.hs
-  Test:
+  Test.Main:
     filename: Test.hs
   Solar.Utility.Date:
     filename: Solar/Utility/Date.hs
