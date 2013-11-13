@@ -48,12 +48,12 @@ cabal-version:       >= 1.10
 
 library
   -- Modules exported by the library.
-  exposed-modules:     Solar.Caster
-                     , Solar.Caster.Channel
-                     , Solar.Caster.Event
-                     , Solar.Caster.Server
-                     , Solar.Caster.Client
-                     , Solar.Caster.Time
+  exposed-modules:     Solar.Cast
+                     , Solar.Cast.Channel
+                     , Solar.Cast.Event
+                     , Solar.Cast.Server
+                     , Solar.Cast.Client
+                     , Solar.Cast.Time
                      , Solar.Utility.Delta
                      , Solar.Utility.Wait
   
