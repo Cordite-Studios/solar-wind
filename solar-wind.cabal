@@ -29,7 +29,7 @@ author:              Levi Schuck
 
 -- An email address to which users can send suggestions, bug reports, and 
 -- patches.
-maintainer:          levi.schuck@gmail.com
+maintainer:          me@levischuck.com
 
 -- A copyright notice.
 -- copyright:           
@@ -43,7 +43,7 @@ build-type:          Simple
 -- extra-source-files:  
 
 -- Constraint on the version of Cabal needed to build this package.
-cabal-version:       >=1.10
+cabal-version:       >= 1.10
 
 
 library
@@ -54,9 +54,11 @@ library
                      , Solar.Caster.Server
                      , Solar.Caster.Client
                      , Solar.Caster.Time
+                     , Solar.Utility.Delta
+                     , Solar.Utility.Wait
   
   -- Modules included in this library but not exported.
-  -- other-modules:       
+  other-modules:       Solar.Utility.Date
                      
   
   -- LANGUAGE extensions used by modules in this package.
@@ -64,9 +66,7 @@ library
   
   -- Other library packages from which modules are imported.
   build-depends:       base >=4.6 && <4.7
-                     , solar-shared == 0.1.*
                      , stm
-                     , pipes >= 4.0
                      , containers
                      , bytestring
                      , time

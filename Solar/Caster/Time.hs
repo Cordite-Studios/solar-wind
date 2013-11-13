@@ -1,20 +1,27 @@
 {-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE CPP #-}
 module Solar.Caster.Time
     (   -- * Structures
       Tick(..)
     , Ticker(..)
     , TickerD
-    , TickingClock(..)
-        -- * Main interaction points
+    , TickingClock
+      -- * Main interaction points
+    , mkNewTicker
+    , getClockTicker
+    , stopClock
+    , startClock
+      -- * Fine control
+    , runClock
     , incClock
     , incClock'
-    , getClockTicker
-    , runClock
+    , mkNewTicker'
     )
 where
 
 import Control.Concurrent.STM
 import Solar.Utility.Delta
+import Solar.Utility.Wait
 import Data.Time
 import Control.Monad
 import Control.Concurrent
@@ -40,11 +47,41 @@ instance Ord Ticker where
 type TickerD = Queue Ticker NominalDiffTime
 type DCTicker = DeltaContainer Ticker NominalDiffTime
 
+-- | The clock structure which is passed around
+-- and maintains information on the ownership
 data TickingClock = TickingClock
     { deltaTicker :: TVar TickerD
     , lastTick    :: UTCTime
     , threadId    :: Maybe ThreadId
     }
+
+mkNewTicker' :: UTCTime -> STM (TVar TickingClock)
+mkNewTicker' time = do
+    q <- newTVar []
+    newTVar $ TickingClock q time Nothing
+
+mkNewTicker :: IO (TVar TickingClock)
+mkNewTicker = do
+    t <- getCurrentTime
+    atomically $ mkNewTicker' t
+
+stopClock :: TVar TickingClock -> IO ()
+stopClock tc = do
+    tid <- atomically $ do
+        c <- readTVar tc
+        return $ threadId c
+    case tid of
+        Nothing -> return ()
+        Just t -> throwTo t ClockStopped
+
+startClock :: TVar TickingClock -> IO ()
+startClock tc = do
+    forkIOWithUnmask $ \unmask -> do
+        catch (unmask $ runClock tc) f
+    return ()
+    where
+        f :: ClockException -> IO ()
+        f _ = return ()
 
 
 incClock    :: ()
@@ -160,52 +197,46 @@ runClock tc = do
     atomically $ do
         c <- readTVar tc
         writeTVar tc $ c { threadId = Just mth}
-    catch m f
-    where
-        m = do
-            -- Sanity check
-            mth <- myThreadId
-            cth <- atomically $ do
-                c <- readTVar tc
-                return $ threadId c
-            unless (Just mth == cth) $ throw ClockChanged
+    runClock' tc
 
-            -- Get time to sleep
-            dt <- atomically $ do
-                c <- readTVar tc
-                readTVar $ deltaTicker c
-            let l = (toRational $ getNextLength dt) * 1000000
-                fl = floor l
-                fl :: Integer
-                lf = fromIntegral fl
-            -- Do the sleeping
-            threadDelay lf
-            -- Hit the clock
-            incClock tc
-            m -- Loop again!
-        f :: ClockException -> IO ()
-        f ItemAdded = do
-            incClock tc
-            catch m f
-        f _ = do
-            mth <- myThreadId
-            -- Remove ownership
-            atomically $ do
-                c <- readTVar tc
-                let cth = threadId c
-                when (Just mth == cth) $ do
-                    writeTVar tc $ c { threadId = Nothing}
-            -- Cease this function
-            return ()
+runClock' :: TVar TickingClock -> IO ()
+runClock' tc = do
+    mth <- myThreadId
+    (cth, q, tq) <- atomically $ do
+        c <- readTVar tc
+        let tid = threadId c
+            dt = deltaTicker c
+        cq <- readTVar dt
+        tq <- readTVar $ deltaTicker c
+        return $ (tid, dt, tq)
+    unless (Just mth == cth) $ throw ClockChanged
+    -- Get time to sleep
+    dt <- atomically $ do
+        c <- readTVar tc
+        readTVar $ deltaTicker c
+    let l = (toRational $ getNextLength dt) * 1000000
+        fl = floor l
+        fl :: Integer
+        lf = fromIntegral fl
+    -- putStrLn $ "Sleeping " ++ (show lf)
+    -- Do the sleeping
+    sleepOnSTM lf tq tc $ \ticking -> do
+        c <- readTVar ticking
+        readTVar $ deltaTicker c
+    -- Hit the clock
+    incClock tc
+    -- Run again!
+    runClock' tc
 
-data ClockException = ItemAdded | ClockAlreadyRunning | ClockChanged
+
+data ClockException = ClockAlreadyRunning | ClockStopped | ClockChanged
     deriving (Show, Typeable)
 
 instance Exception ClockException
 
 
 -- import Control.Concurrent
-
+#ifdef TESTPLAY
 mkDemoTicker time i' = do
     let i = fromInteger i'
         t = Tick 0 time i
@@ -244,9 +275,11 @@ doDemo' x = do
         incClock d
         showDemo d
 
+
 stepUntil d time diff endtime = do
     atomically $ incClock' ntime diff d
     showDemo d
     when (ntime < endtime) $ stepUntil d ntime diff endtime
     where ntime = addUTCTime diff time
 
+#endif
