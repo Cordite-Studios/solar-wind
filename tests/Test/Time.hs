@@ -11,7 +11,7 @@ import Control.Exception
 import Control.Monad
 import Data.Maybe
 import System.Timeout
-import Control.Concurrent
+-- import Control.Concurrent
 
 -- This library imports
 import Solar.Cast.Time
@@ -35,7 +35,6 @@ time = testGroup "Solar.Cast.Time"
         -- Should not throw an exception
         tc <- mkNewTicker
         startClock tc
-        threadDelay 10000
         t <- readTVarIO tc
         when (isNothing $ threadId t) $ error "Thread did not register"
         stopClock tc
@@ -43,9 +42,7 @@ time = testGroup "Solar.Cast.Time"
         -- Should not throw an exception
         tc <- mkNewTicker
         startClock tc
-        threadDelay 10000
         stopClock tc
-        threadDelay 10000
         t' <- readTVarIO tc
         when (isJust $ threadId t') $ error "Thread did not leave"
         

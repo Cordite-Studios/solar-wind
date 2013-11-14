@@ -3,6 +3,7 @@ module Solar.Utility.Wait where
 import System.Timeout
 import Control.Concurrent
 import Control.Concurrent.STM
+import Data.Maybe
 
 type WaitOn = MVar ()
 
@@ -23,10 +24,19 @@ sleepOnSTM  :: (Eq a)
             -> (TVar b -> STM a)
             -> IO ()
 sleepOnSTM i original s f = do
-    _ <- timeout i $ atomically $ do
+    _ <- sleepOnSTM' i original s f
+    return ()
+
+sleepOnSTM' :: (Eq a)
+            => Int -- ^ Time to sleep in microseconds
+            -> a -- ^ Original
+            -> TVar b -- ^ Some structure
+            -> (TVar b -> STM a)
+            -> IO Bool
+sleepOnSTM' i original s f = do
+    timed <- timeout i $ atomically $ do
         current <- f s
         check $ current /= original
         -- Only let the transaction pass through
         -- if things HAVE changed!
-    return ()
-
+    return $ isJust timed

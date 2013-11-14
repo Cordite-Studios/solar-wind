@@ -34,7 +34,7 @@ data TickingClock = TickingClock
     , threadId    :: Maybe ThreadId
     }
 
-data ClockException = ClockAlreadyRunning | ClockStopped | ClockChanged
+data ClockException = ClockAlreadyRunning | ClockStopped | ClockChanged | ClockDidNotStart
     deriving (Show, Typeable)
 
 instance Exception ClockException
