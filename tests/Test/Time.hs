@@ -66,15 +66,25 @@ time = testGroup "Solar.Cast.Time"
         tq <- readTVarIO $ deltaTicker t
         let total = foldl (\a v -> a + remaining v) 0 tq
         total @?= fromInteger x
+    , testCase "Correct Spacing" $ do
+        tc <- mkNewTicker
+        let x = 10
+        atomically $ forM_ [1..x] $ \d ->
+            getClockTicker tc (fromInteger d)
+        t <- readTVarIO tc
+        tq <- readTVarIO $ deltaTicker t
+        let spaced = map (\v -> remaining v == 1) tq
+        assertBool "All spaced by 1 second" $ and spaced
     , testCase "Correct Subtraction when half-ticking" $ do
         tc <- mkNewTicker
         let x = 100
         atomically $ forM_ [1..x] $ \d ->
             getClockTicker tc (fromInteger d)
         t <- getCurrentTime
-        [r1:r2:_] <- atomically $ do
+        r1:r2:_ <- atomically $ do
             incClock' t 0.5 tc
             c <- readTVar tc
             readTVar $ deltaTicker c
-        remaining r1 @?= 0.5
+        remaining r1 @?= (0.5::NominalDiffTime)
+        remaining r2 @?= (1::NominalDiffTime)
     ]
