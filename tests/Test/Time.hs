@@ -5,6 +5,7 @@ import Test.Tasty.HUnit
 
 -- 3rd party imports
 import Control.Concurrent.STM
+import Data.Time
 
 -- Base imports
 import Control.Exception
@@ -56,7 +57,7 @@ time = testGroup "Solar.Cast.Time"
                 startClock tc
                 startClock tc)
         p @?= Just ()
-    , testCase "Correct spacing between counts" $ do
+    , testCase "Correct totalling" $ do
         tc <- mkNewTicker
         let x = 100
         atomically $ forM_ [1..x] $ \d ->
@@ -65,4 +66,15 @@ time = testGroup "Solar.Cast.Time"
         tq <- readTVarIO $ deltaTicker t
         let total = foldl (\a v -> a + remaining v) 0 tq
         total @?= fromInteger x
+    , testCase "Correct Subtraction when half-ticking" $ do
+        tc <- mkNewTicker
+        let x = 100
+        atomically $ forM_ [1..x] $ \d ->
+            getClockTicker tc (fromInteger d)
+        t <- getCurrentTime
+        [r1:r2:_] <- atomically $ do
+            incClock' t 0.5 tc
+            c <- readTVar tc
+            readTVar $ deltaTicker c
+        remaining r1 @?= 0.5
     ]
