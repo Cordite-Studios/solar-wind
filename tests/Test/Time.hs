@@ -77,7 +77,7 @@ time = testGroup "Solar.Cast.Time"
         assertBool "All spaced by 1 second" $ and spaced
     , testCase "Correct Subtraction when half-ticking" $ do
         tc <- mkNewTicker
-        let x = 100
+        let x = 10
         atomically $ forM_ [1..x] $ \d ->
             getClockTicker tc (fromInteger d)
         t <- getCurrentTime
@@ -87,4 +87,60 @@ time = testGroup "Solar.Cast.Time"
             readTVar $ deltaTicker c
         remaining r1 @?= (0.5::NominalDiffTime)
         remaining r2 @?= (1::NominalDiffTime)
+    , testCase "Correct behavior when over-ticking" $ do
+        tc <- mkNewTicker
+        let x = 10
+        atomically $ forM_ [1..x] $ \d ->
+            getClockTicker tc (fromInteger d)
+        t <- getCurrentTime
+        r1:r2:r3:r4:_ <- atomically $ do
+            incClock' t 1.5 tc
+            c <- readTVar tc
+            readTVar $ deltaTicker c
+        -- 2 should only have 0.5 seconds left.
+        remaining r2 @?= (0.5::NominalDiffTime)
+        -- 1 was overticked, so we use a modulo.
+        -- 1.5 modulo 1 is 0.5
+        remaining r1 @?= (0.5::NominalDiffTime)
+        -- 3-1.5 = 1.5. 1.5 - (0.5) - (0.5) = 0.5
+        remaining r3 @?= (0.5::NominalDiffTime)
+        -- 4 should be left alone.
+        remaining r4 @?= (1::NominalDiffTime)
+    , testCase "Perfect tick on first items (1)" $ do
+        tc <- mkNewTicker
+        t <- getCurrentTime
+        let x = 10
+        atomically $ forM_ [1..x] $ \d ->
+            getClockTicker tc (fromInteger d)
+        r1:r2:_ <- atomically $ do
+            incClock' t 1 tc
+            c <- readTVar tc
+            readTVar $ deltaTicker c
+        (r1t, r2t) <- atomically $ do
+            r1' <- readTVar $ tick $ content r1
+            r2' <- readTVar $ tick $ content r2
+            return (ticks r1', ticks r2')
+        assertBool "Bad Resultant tick" $ and
+            [ (remaining r1 == 0) /= (r1t == 1)
+            , (remaining r2 == 1) /= (r2t == 1)
+            ]
+    , testCase "Perfect tick on first items (2)" $ do
+        tc <- mkNewTicker
+        t <- getCurrentTime
+        let x = 10
+        atomically $ forM_ [1..x] $ \d ->
+            getClockTicker tc (fromInteger d)
+        r1:r2:_ <- atomically $ do
+            incClock' t 1 tc
+            incClock' t 1 tc
+            c <- readTVar tc
+            readTVar $ deltaTicker c
+        (r1t, r2t) <- atomically $ do
+            r1' <- readTVar $ tick $ content r1
+            r2' <- readTVar $ tick $ content r2
+            return (ticks r1', ticks r2')
+        assertBool "Bad Resultant tick" $ and
+            [ (remaining r1 == 0) /= (r1t == 1)
+            , (remaining r2 == 0) /= (r2t == 1)
+            ]
     ]

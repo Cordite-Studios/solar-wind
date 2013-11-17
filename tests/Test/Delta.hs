@@ -7,7 +7,7 @@ import Test.Tasty.QuickCheck as QC
 import Solar.Utility.Delta
 
 delta :: TestTree
-delta = testGroup "Delta"
+delta = testGroup "Solar.Utility.Delta"
     [ QC.testProperty "Sum is always >= 0" $
         \(v::[Positive Integer]) ->
             let x = map (DeltaContainer ()) v
