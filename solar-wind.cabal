@@ -52,13 +52,9 @@ library
                      , Solar.Cast.Event
                      , Solar.Cast.Server
                      , Solar.Cast.Client
-                     , Solar.Cast.Time
-                     , Solar.Cast.Internal.Time
-                     , Solar.Utility.Delta
-                     , Solar.Utility.Wait
   
   -- Modules included in this library but not exported.
-  other-modules:       Solar.Utility.Date
+  -- other-modules:       
                      
   
   -- LANGUAGE extensions used by modules in this package.
@@ -96,5 +92,4 @@ test-suite tests
                       , stm
                       , time
 
-  other-modules:        Test.Time
-                      , Test.Delta
+  -- other-modules:        
